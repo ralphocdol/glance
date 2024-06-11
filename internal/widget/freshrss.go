@@ -20,7 +20,7 @@ type FreshRSS struct {
 	CollapseAfter   int                   `yaml:"collapse-after"`
 	FreshRSSUrl     string                `yaml:"freshrss-url"`
 	FreshRSSUser    string                `yaml:"freshrss-user"`
-	FreshRSSApiPass string                `yaml:"freshrss-api-pass"`
+	FreshRSSApiPass OptionalEnvString     `yaml:"freshrss-api-pass"`
 }
 
 func (widget *FreshRSS) Initialize() error {
@@ -50,7 +50,7 @@ func (widget *FreshRSS) Update(ctx context.Context) {
 	var items feed.RSSFeedItems
 	var err error
 
-	items, err = feed.GetItemsFromFreshRssFeeds(widget.FreshRSSUrl, widget.FreshRSSUser, widget.FreshRSSApiPass)
+	items, err = feed.GetItemsFromFreshRssFeeds(widget.FreshRSSUrl, widget.FreshRSSUser, string(widget.FreshRSSApiPass))
 
 	if !widget.canContinueUpdateAfterHandlingErr(err) {
 		return
