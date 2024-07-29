@@ -123,6 +123,8 @@ const (
 type widgetBase struct {
 	Type                string        `yaml:"type"`
 	Title               string        `yaml:"title"`
+	TitleURL            string        `yaml:"title-url"`
+	CSSClass            string        `yaml:"css-class"`
 	CustomCacheDuration DurationField `yaml:"cache"`
 	ContentAvailable    bool          `yaml:"-"`
 	Error               error         `yaml:"-"`
@@ -184,6 +186,14 @@ func (w *widgetBase) render(data any, t *template.Template) template.HTML {
 func (w *widgetBase) withTitle(title string) *widgetBase {
 	if w.Title == "" {
 		w.Title = title
+	}
+
+	return w
+}
+
+func (w *widgetBase) withTitleURL(titleURL string) *widgetBase {
+	if w.TitleURL == "" {
+		w.TitleURL = titleURL
 	}
 
 	return w

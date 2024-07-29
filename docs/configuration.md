@@ -40,7 +40,6 @@ pages:
     columns:
       - size: small
         widgets:
-          - type: clock
           - type: calendar
 
           - type: rss
@@ -235,6 +234,8 @@ theme:
 > .widget-type-rss a {
 >     font-size: 1.5rem;
 > }
+>
+> In addition, you can also use the `css-class` property which is available on every widget to set custom class names for individual widgets.
 
 
 ## Pages & Columns
@@ -355,13 +356,18 @@ pages:
 | ---- | ---- | -------- |
 | type | string | yes |
 | title | string | no |
+| title-url | string | no |
 | cache | string | no |
+| css-class | string | no |
 
 #### `type`
 Used to specify the widget.
 
 #### `title`
 The title of the widget. If left blank it will be defined by the widget.
+
+#### `title-url`
+The URL to go to when clicking on the widget's title. If left blank it will be defined by the widget (if available).
 
 #### `cache`
 How long to keep the fetched data in memory. The value is a string and must be a number followed by one of s, m, h, d. Examples:
@@ -376,6 +382,9 @@ cache: 1d  # 1 day
 > [!NOTE]
 >
 > Not all widgets can have their cache duration modified. The calendar and weather widgets update on the hour and this cannot be changed.
+
+#### `css-class`
+Set custom CSS classes for the specific widget instance.
 
 ### RSS
 Display a list of articles from multiple RSS feeds.
@@ -573,10 +582,22 @@ Preview:
 #### Properties
 | Name | Type | Required | Default |
 | ---- | ---- | -------- | ------- |
+| instance-url | string | no | https://lobste.rs/ |
+| custom-url | string | no | |
 | limit | integer | no | 15 |
 | collapse-after | integer | no | 5 |
 | sort-by | string | no | hot |
 | tags | array | no | |
+
+##### `instance-url`
+The base URL for a lobsters instance hosted somewhere other than on lobste.rs. Example:
+
+```yaml
+instance-url: https://www.journalduhacker.net/
+```
+
+##### `custom-url`
+A custom URL to retrieve lobsters posts from. If this is specified, the `instance-url`, `sort-by` and `tags` properties are ignored.
 
 ##### `limit`
 The maximum number of posts to show.
@@ -734,6 +755,7 @@ Preview:
 | ---- | ---- | -------- | ------- |
 | search-engine | string | no | duckduckgo |
 | new-tab | boolean | no | false |
+| autofocus | boolean | no | false |
 | bangs | array | no | |
 
 ##### `search-engine`
@@ -746,6 +768,9 @@ Either a value from the table below or a URL to a custom search engine. Use `{QU
 
 ##### `new-tab`
 When set to `true`, swaps the shortcuts for showing results in the same or new tab, defaulting to showing results in a new tab.
+
+##### `new-tab`
+When set to `true`, automatically focuses the search input on page load.
 
 ##### `bangs`
 What now? [Bangs](https://duckduckgo.com/bangs). They're shortcuts that allow you to use the same search box for many different sites. Assuming you have it configured, if for example you start your search input with `!yt` you'd be able to perform a search on YouTube:
