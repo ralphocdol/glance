@@ -1,7 +1,7 @@
 {{ template "widget-base.html" . }}
 
 {{ define "widget-content" }}
-<ul class="list list-gap-14 list-collapsible" data-collapse-after="{{ .CollapseAfter }}">
+<ul class="list list-gap-14 list-collapsible single-line-titles" data-collapse-after="{{ .CollapseAfter }}">
     {{ range $i, $release := .Releases }}
     <li>
         <div class="flex gap-10 items-start thumbnail-container">
@@ -25,7 +25,7 @@
     </li>
     {{ end }}
 </ul>
-{{ if gt (len .Releases) $.CollapseAfter }}
+<!-- {{ if gt (len .Releases) $.CollapseAfter }}
 <label class="list-collapsible-label"><input type="checkbox" autocomplete="off" class="list-collapsible-input"></label>
-{{ end }}
+{{ end }} -->
 {{ end }}
