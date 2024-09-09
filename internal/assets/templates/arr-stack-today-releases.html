@@ -1,7 +1,7 @@
 {{ template "widget-base.html" . }}
 
 {{ define "widget-content" }}
-<ul class="list list-gap-14 list-collapsible single-line-titles" data-collapse-after="{{ .CollapseAfter }}">
+<ul class="list list-gap-14 collapsible-container single-line-titles" data-collapse-after="{{ .CollapseAfter }}">
     {{ range $i, $release := .Releases }}
     <li>
         <div class="flex gap-10 items-start thumbnail-container">
@@ -16,7 +16,7 @@
             </div>
             <div class="shrink min-width-0">
                 <strong class="size-h3 block text-truncate">{{ $release.Title }} - S{{ $release.SeasonNumber }}E{{ $release.EpisodeNumber }}</strong>
-                <div>Airing on {{ $release.AirDateUtc }} (UTC)</div>
+                <div>Airing on {{ $release.AirDateUtc }}</div>
                 {{ if $release.Grabbed }}
                     <div class="arr-grabbed-label">Grabbed</div>
                 {{ end }}
@@ -25,7 +25,4 @@
     </li>
     {{ end }}
 </ul>
-<!-- {{ if gt (len .Releases) $.CollapseAfter }}
-<label class="list-collapsible-label"><input type="checkbox" autocomplete="off" class="list-collapsible-input"></label>
-{{ end }} -->
 {{ end }}
