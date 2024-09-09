@@ -10,14 +10,16 @@ import (
 )
 
 type RSS struct {
-	widgetBase      `yaml:",inline"`
-	FeedRequests    []feed.RSSFeedRequest `yaml:"feeds"`
-	Style           string                `yaml:"style"`
-	ThumbnailHeight float64               `yaml:"thumbnail-height"`
-	CardHeight      float64               `yaml:"card-height"`
-	Items           feed.RSSFeedItems     `yaml:"-"`
-	Limit           int                   `yaml:"limit"`
-	CollapseAfter   int                   `yaml:"collapse-after"`
+	widgetBase       `yaml:",inline"`
+	FeedRequests     []feed.RSSFeedRequest `yaml:"feeds"`
+	Style            string                `yaml:"style"`
+	ThumbnailHeight  float64               `yaml:"thumbnail-height"`
+	CardHeight       float64               `yaml:"card-height"`
+	Items            feed.RSSFeedItems     `yaml:"-"`
+	Limit            int                   `yaml:"limit"`
+	CollapseAfter    int                   `yaml:"collapse-after"`
+	SingleLineTitles bool                  `yaml:"single-line-titles"`
+	NoItemsMessage   string                `yaml:"-"`
 }
 
 func (widget *RSS) Initialize() error {
@@ -44,6 +46,8 @@ func (widget *RSS) Initialize() error {
 			widget.FeedRequests[i].IsDetailed = true
 		}
 	}
+
+	widget.NoItemsMessage = "No items were returned from the feeds."
 
 	return nil
 }

@@ -138,7 +138,7 @@ func getItemsFromRSSFeedTask(request RSSFeedRequest) ([]RSSFeedItem, error) {
 			if err == nil {
 				var link string
 
-				if item.Link[0] == '/' {
+				if len(item.Link) > 0 && item.Link[0] == '/' {
 					link = item.Link
 				} else {
 					link = "/" + item.Link
@@ -189,7 +189,11 @@ func getItemsFromRSSFeedTask(request RSSFeedRequest) ([]RSSFeedItem, error) {
 		} else if url := findThumbnailInItemExtensions(item); url != "" {
 			rssItem.ImageURL = url
 		} else if feed.Image != nil {
-			rssItem.ImageURL = feed.Image.URL
+			if len(feed.Image.URL) > 0 && feed.Image.URL[0] == '/' {
+				rssItem.ImageURL = strings.TrimRight(feed.Link, "/") + feed.Image.URL
+			} else {
+				rssItem.ImageURL = feed.Image.URL
+			}
 		}
 
 		if item.PublishedParsed != nil {
@@ -256,7 +260,7 @@ func GetItemsFromRSSFeeds(requests []RSSFeedRequest) (RSSFeedItems, error) {
 		entries = append(entries, feeds[i]...)
 	}
 
-	if len(entries) == 0 {
+	if failed == len(requests) {
 		return nil, ErrNoContent
 	}
 
