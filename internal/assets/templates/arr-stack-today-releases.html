@@ -1,9 +1,9 @@
 {{ template "widget-base.html" . }}
 
 {{ define "widget-content" }}
-<ul class="list list-gap-14 list-collapsible">
+<ul class="list list-gap-14 list-collapsible" data-collapse-after="{{ .CollapseAfter }}">
     {{ range $i, $release := .Releases }}
-    <li {{ if shouldCollapse $i $.CollapseAfter }}class="list-collapsible-item" style="--animation-delay: {{ itemAnimationDelay $i $.CollapseAfter }};"{{ end }}>
+    <li>
         <div class="flex gap-10 items-start thumbnail-container">
             <div class="anime-release-cover-container">
                 {{ if $release.ImageCoverUrl }}
