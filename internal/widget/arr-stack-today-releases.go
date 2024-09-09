@@ -16,11 +16,13 @@ type ArrReleases struct {
 		Enable   bool   `yaml:"enable"`
 		Endpoint string `yaml:"endpoint"`
 		ApiKey   string `yaml:"apikey"`
+		Timezone string `yaml:"timezone"`
 	}
 	Radarr struct {
 		Enable   bool   `yaml:"enable"`
 		Endpoint string `yaml:"endpoint"`
 		ApiKey   string `yaml:"apikey"`
+		Timezone string `yaml:"timezone"`
 	}
 	CollapseAfter int           `yaml:"collapse-after"`
 	CacheDuration time.Duration `yaml:"cache-duration"`

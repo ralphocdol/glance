@@ -15,12 +15,14 @@ type SonarrConfig struct {
 	Enable   bool   `yaml:"enable"`
 	Endpoint string `yaml:"endpoint"`
 	ApiKey   string `yaml:"apikey"`
+	Timezone string `yaml:"timezone"`
 }
 
 type RadarrConfig struct {
 	Enable   bool   `yaml:"enable"`
 	Endpoint string `yaml:"endpoint"`
 	ApiKey   string `yaml:"apikey"`
+	Timezone string `yaml:"timezone"`
 }
 
 type ArrRelease struct {
@@ -68,7 +70,28 @@ func extractHostFromURL(apiEndpoint string) string {
 	return u.Host
 }
 
-func FetchReleasesFromSonarr(SonarrEndpoint string, SonarrApiKey string) (ArrReleases, error) {
+func HandleReleaseDatesTimezone(airDate time.Time, CustomTimezone string) (string, error) {
+	var formattedDate string
+	if CustomTimezone != "" {
+		location, err := time.LoadLocation(CustomTimezone)
+		if err != nil {
+			return "", fmt.Errorf("failed to load location: %v", err)
+		}
+
+		// Convert the parsed time to the new time zone
+		airDateInLocation := airDate.In(location)
+
+		// Format the date as YYYY-MM-DD HH:MM:SS in the new time zone
+		formattedDate = airDateInLocation.Format("2006-01-02 15:04:05")
+	} else {
+		// Format the date as YYYY-MM-DD HH:MM:SS
+		formattedDate = airDate.Format("2006-01-02 15:04:05")
+	}
+
+	return formattedDate, nil
+}
+
+func FetchReleasesFromSonarr(SonarrEndpoint string, SonarrApiKey string, CustomTimezone string) (ArrReleases, error) {
 	if SonarrEndpoint == "" {
 		return nil, fmt.Errorf("missing sonarr-endpoint config")
 	}
@@ -122,8 +145,10 @@ func FetchReleasesFromSonarr(SonarrEndpoint string, SonarrApiKey string) (ArrRel
 			return nil, fmt.Errorf("failed to parse air date: %v", err)
 		}
 
-		// Format the date as YYYY-MM-DD HH:MM:SS
-		formattedDate := airDate.Format("2006-01-02 15:04:05")
+		formattedDate, err := HandleReleaseDatesTimezone(airDate, CustomTimezone)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse air timezone: %v", err)
+		}
 
 		// Format SeasonNumber and EpisodeNumber with at least two digits
 		seasonNumber := fmt.Sprintf("%02d", release.SeasonNumber)
@@ -142,7 +167,7 @@ func FetchReleasesFromSonarr(SonarrEndpoint string, SonarrApiKey string) (ArrRel
 	return releases, nil
 }
 
-func FetchReleasesFromRadarr(RadarrEndpoint string, RadarrApiKey string) (ArrReleases, error) {
+func FetchReleasesFromRadarr(RadarrEndpoint string, RadarrApiKey string, CustomTimezone string) (ArrReleases, error) {
 	if RadarrEndpoint == "" {
 		return nil, fmt.Errorf("missing radarr-endpoint config")
 	}
@@ -207,8 +232,13 @@ func FetchReleasesFromRadarr(RadarrEndpoint string, RadarrApiKey string) (ArrRel
 			return nil, fmt.Errorf("failed to parse release date: %v", err)
 		}
 
+		timezoneDate, err := HandleReleaseDatesTimezone(airDate, CustomTimezone)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse air timezone: %v", err)
+		}
+
 		// Format the date as YYYY-MM-DD HH:MM:SS
-		formattedDate = formattedDate + airDate.Format("2006-01-02 15:04:05")
+		formattedDate = formattedDate + timezoneDate
 
 		releases = append(releases, ArrRelease{
 			Title:         release.Title,
@@ -226,7 +256,7 @@ func FetchReleasesFromArrStack(Sonarr SonarrConfig, Radarr RadarrConfig) (ArrRel
 
 	// Call FetchReleasesFromSonarr and handle the result
 	if Sonarr.Enable {
-		sonarrReleases, err := FetchReleasesFromSonarr(Sonarr.Endpoint, Sonarr.ApiKey)
+		sonarrReleases, err := FetchReleasesFromSonarr(Sonarr.Endpoint, Sonarr.ApiKey, Sonarr.Timezone)
 		if err != nil {
 			slog.Warn("failed to fetch release from sonarr", "error", err)
 			return nil, err
@@ -237,7 +267,7 @@ func FetchReleasesFromArrStack(Sonarr SonarrConfig, Radarr RadarrConfig) (ArrRel
 
 	// Call FetchReleasesFromRadarr and handle the result
 	if Radarr.Enable {
-		radarrReleases, err := FetchReleasesFromRadarr(Radarr.Endpoint, Radarr.ApiKey)
+		radarrReleases, err := FetchReleasesFromRadarr(Radarr.Endpoint, Radarr.ApiKey, Radarr.Timezone)
 		if err != nil {
 			slog.Warn("failed to fetch release from radarr", "error", err)
 			return nil, err
