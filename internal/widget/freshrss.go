@@ -10,17 +10,19 @@ import (
 )
 
 type FreshRSS struct {
-	widgetBase      `yaml:",inline"`
-	FeedRequests    []feed.RSSFeedRequest `yaml:"feeds"`
-	Style           string                `yaml:"style"`
-	ThumbnailHeight float64               `yaml:"thumbnail-height"`
-	CardHeight      float64               `yaml:"card-height"`
-	Items           feed.RSSFeedItems     `yaml:"-"`
-	Limit           int                   `yaml:"limit"`
-	CollapseAfter   int                   `yaml:"collapse-after"`
-	FreshRSSUrl     string                `yaml:"freshrss-url"`
-	FreshRSSUser    string                `yaml:"freshrss-user"`
-	FreshRSSApiPass OptionalEnvString     `yaml:"freshrss-api-pass"`
+	widgetBase       `yaml:",inline"`
+	FeedRequests     []feed.RSSFeedRequest `yaml:"feeds"`
+	Style            string                `yaml:"style"`
+	ThumbnailHeight  float64               `yaml:"thumbnail-height"`
+	CardHeight       float64               `yaml:"card-height"`
+	Items            feed.RSSFeedItems     `yaml:"-"`
+	Limit            int                   `yaml:"limit"`
+	CollapseAfter    int                   `yaml:"collapse-after"`
+	SingleLineTitles bool                  `yaml:"single-line-titles"`
+	NoItemsMessage   string                `yaml:"-"`
+	FreshRSSUrl      string                `yaml:"freshrss-url"`
+	FreshRSSUser     string                `yaml:"freshrss-user"`
+	FreshRSSApiPass  OptionalEnvString     `yaml:"freshrss-api-pass"`
 }
 
 func (widget *FreshRSS) Initialize() error {
@@ -41,6 +43,14 @@ func (widget *FreshRSS) Initialize() error {
 	if widget.CardHeight < 0 {
 		widget.CardHeight = 0
 	}
+
+	if widget.Style == "detailed-list" {
+		for i := range widget.FeedRequests {
+			widget.FeedRequests[i].IsDetailed = true
+		}
+	}
+
+	widget.NoItemsMessage = "No items were returned from the feeds."
 
 	return nil
 }
@@ -70,6 +80,10 @@ func (widget *FreshRSS) Render() template.HTML {
 
 	if widget.Style == "horizontal-cards-2" {
 		return widget.render(widget, assets.RSSHorizontalCards2Template)
+	}
+
+	if widget.Style == "detailed-list" {
+		return widget.render(widget, assets.RSSDetailedListTemplate)
 	}
 
 	return widget.render(widget, assets.RSSListTemplate)
