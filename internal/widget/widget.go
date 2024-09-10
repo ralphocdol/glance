@@ -67,8 +67,8 @@ func New(widgetType string) (Widget, error) {
 		widget = &Group{}
 	case "dns-stats":
 		widget = &DNSStats{}
-	case "arr-stack-releases":
-		return &ArrReleases{}, nil
+	case "sonarr-releases":
+		return &SonarrReleases{}, nil
 	default:
 		return nil, fmt.Errorf("unknown widget type: %s", widgetType)
 	}

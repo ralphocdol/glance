@@ -1521,11 +1521,26 @@ details[open] .summary::after {
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
+.arr-release-cover.placeholder {
+    min-width: 6em;
+    overflow: hidden;
+}
+
 .arr-grabbed-label {
-    color: green; /* or any other color you prefer */
+    color: var(--color-positive);
     font-weight: bold;
     padding: 2px 5px;
-    border: 1px solid green;
+    border: 1px solid var(--color-positive);
+    border-radius: 3px;
+    display: inline-block;
+    margin-top: 5px;
+}
+
+.arr-missing-label {
+    color: var(--color-negative);
+    font-weight: bold;
+    padding: 2px 5px;
+    border: 1px solid var(--color-negative);
     border-radius: 3px;
     display: inline-block;
     margin-top: 5px;

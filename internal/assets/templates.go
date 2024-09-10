@@ -39,7 +39,7 @@ var (
 	ExtensionTemplate             = compileTemplate("extension.html", "widget-base.html")
 	GroupTemplate                 = compileTemplate("group.html", "widget-base.html")
 	DNSStatsTemplate              = compileTemplate("dns-stats.html", "widget-base.html")
-	ArrReleasesTemplate           = compileTemplate("arr-stack-today-releases.html", "widget-base.html")
+	SonarrReleasesTemplate        = compileTemplate("sonarr-releases.html", "widget-base.html")
 )
 
 var globalTemplateFunctions = template.FuncMap{
