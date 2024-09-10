@@ -2,6 +2,9 @@
 
 {{ define "widget-content" }}
 <ul class="list list-gap-14 collapsible-container single-line-titles" data-collapse-after="{{ .CollapseAfter }}">
+    {{ if eq (len .Releases) 0 }}
+        <div>No upcoming show(s)</div>
+    {{ else }}
     {{ range $i, $release := .Releases }}
     <li>
         <div class="flex gap-10 items-start thumbnail-container">
@@ -34,6 +37,7 @@
             </div>
         </div>
     </li>
+    {{ end }}
     {{ end }}
 </ul>
 {{ end }}
