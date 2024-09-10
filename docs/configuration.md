@@ -307,6 +307,7 @@ pages:
 | title | string | yes | |
 | slug | string | no | |
 | width | string | no | |
+| center-vertically | boolean | no | false |
 | hide-desktop-navigation | boolean | no | false |
 | show-mobile-header | boolean | no | false |
 | columns | array | yes | |
@@ -328,6 +329,8 @@ The maximum width of the page on desktop. Possible values are `slim` and `wide`.
 >
 > When using `slim`, the maximum number of columns allowed for that page is `2`.
 
+#### `center-vertically`
+When set to `true`, vertically centers the content on the page. Has no effect if the content is taller than the height of the viewport.
 
 #### `hide-desktop-navigation`
 Whether to show the navigation links at the top of the page on desktop.
@@ -1111,7 +1114,7 @@ Whether to ignore invalid/self-signed certificates.
 Whether to open the link in the same or a new tab.
 
 ### Releases
-Display a list of latest releases for specific repositories on Github, GitLab or Docker Hub.
+Display a list of latest releases for specific repositories on Github, GitLab, Codeberg or Docker Hub.
 
 Example:
 
@@ -1122,6 +1125,7 @@ Example:
     - go-gitea/gitea
     - jellyfin/jellyfin
     - glanceapp/glance
+    - codeberg:redict/redict
     - gitlab:fdroid/fdroidclient
     - dockerhub:gotify/server
 ```
@@ -1142,12 +1146,13 @@ Preview:
 | collapse-after | integer | no | 5 |
 
 ##### `repositories`
-A list of repositores to fetch the latest release for. Only the name/repo is required, not the full URL. A prefix can be specified for repositories hosted elsewhere such as GitLab and Docker Hub. Example:
+A list of repositores to fetch the latest release for. Only the name/repo is required, not the full URL. A prefix can be specified for repositories hosted elsewhere such as GitLab, Codeberg and Docker Hub. Example:
 
 ```yaml
 repositories:
   - gitlab:inkscape/inkscape
   - dockerhub:glanceapp/glance
+  - codeberg:redict/redict
 ```
 
 Official images on Docker Hub can be specified by ommiting the owner:
@@ -1169,7 +1174,7 @@ repositories:
 
 
 ##### `show-source-icon`
-Shows an icon of the source (GitHub/GitLab/Docker Hub) next to the repository name when set to `true`.
+Shows an icon of the source (GitHub/GitLab/Codeberg/Docker Hub) next to the repository name when set to `true`.
 
 ##### `token`
 Without authentication Github allows for up to 60 requests per hour. You can easily exceed this limit and start seeing errors if you're tracking lots of repositories or your cache time is low. To circumvent this you can [create a read only token from your Github account](https://github.com/settings/personal-access-tokens/new) and provide it here.
