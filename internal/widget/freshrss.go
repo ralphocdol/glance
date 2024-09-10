@@ -10,17 +10,19 @@ import (
 )
 
 type FreshRSS struct {
-	widgetBase      `yaml:",inline"`
-	FeedRequests    []feed.RSSFeedRequest `yaml:"feeds"`
-	Style           string                `yaml:"style"`
-	ThumbnailHeight float64               `yaml:"thumbnail-height"`
-	CardHeight      float64               `yaml:"card-height"`
-	Items           feed.RSSFeedItems     `yaml:"-"`
-	Limit           int                   `yaml:"limit"`
-	CollapseAfter   int                   `yaml:"collapse-after"`
-	FreshRSSUrl     string                `yaml:"freshrss-url"`
-	FreshRSSUser    string                `yaml:"freshrss-user"`
-	FreshRSSApiPass string                `yaml:"freshrss-api-pass"`
+	widgetBase       `yaml:",inline"`
+	FeedRequests     []feed.RSSFeedRequest `yaml:"feeds"`
+	Style            string                `yaml:"style"`
+	ThumbnailHeight  float64               `yaml:"thumbnail-height"`
+	CardHeight       float64               `yaml:"card-height"`
+	Items            feed.RSSFeedItems     `yaml:"-"`
+	Limit            int                   `yaml:"limit"`
+	CollapseAfter    int                   `yaml:"collapse-after"`
+	SingleLineTitles bool                  `yaml:"single-line-titles"`
+	NoItemsMessage   string                `yaml:"-"`
+	FreshRSSUrl      string                `yaml:"url"`
+	FreshRSSUser     string                `yaml:"user"`
+	FreshRSSApiPass  OptionalEnvString     `yaml:"api-pass"`
 }
 
 func (widget *FreshRSS) Initialize() error {
@@ -50,7 +52,7 @@ func (widget *FreshRSS) Update(ctx context.Context) {
 	var items feed.RSSFeedItems
 	var err error
 
-	items, err = feed.GetItemsFromFreshRssFeeds(widget.FreshRSSUrl, widget.FreshRSSUser, widget.FreshRSSApiPass)
+	items, err = feed.GetItemsFromFreshRssFeeds(widget.FreshRSSUrl, widget.FreshRSSUser, string(widget.FreshRSSApiPass))
 
 	if !widget.canContinueUpdateAfterHandlingErr(err) {
 		return
