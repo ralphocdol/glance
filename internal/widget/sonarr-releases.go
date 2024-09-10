@@ -36,7 +36,7 @@ func convertToSonarrConfig(s SonarrInternal) feed.SonarrConfig {
 }
 
 func (widget *SonarrReleases) Initialize() error {
-	widget.withTitle("Releasing Today")
+	widget.withTitle("Sonarr: Releasing Today")
 
 	// Set cache duration
 	if widget.CacheDuration == 0 {
