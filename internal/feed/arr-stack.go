@@ -1,6 +1,7 @@
 package feed
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,26 +13,32 @@ import (
 )
 
 type SonarrConfig struct {
-	Enable   bool   `yaml:"enable"`
-	Endpoint string `yaml:"endpoint"`
-	ApiKey   string `yaml:"apikey"`
-	Timezone string `yaml:"timezone"`
+	Enable      bool   `yaml:"enable"`
+	Endpoint    string `yaml:"endpoint"`
+	SkipSsl     bool   `yaml:"skipssl"`
+	ApiKey      string `yaml:"apikey"`
+	ExternalUrl string `yaml:"external-url"`
+	Timezone    string `yaml:"timezone"`
 }
 
 type RadarrConfig struct {
-	Enable   bool   `yaml:"enable"`
-	Endpoint string `yaml:"endpoint"`
-	ApiKey   string `yaml:"apikey"`
-	Timezone string `yaml:"timezone"`
+	Enable      bool   `yaml:"enable"`
+	Endpoint    string `yaml:"endpoint"`
+	SkipSsl     bool   `yaml:"skipssl"`
+	ApiKey      string `yaml:"apikey"`
+	ExternalUrl string `yaml:"external-url"`
+	Timezone    string `yaml:"timezone"`
 }
 
 type ArrRelease struct {
 	Title         string
+	Overview      string
 	ImageCoverUrl string
 	AirDateUtc    string
 	SeasonNumber  *string
 	EpisodeNumber *string
 	Grabbed       bool
+	Url           string
 }
 
 type ArrReleases []ArrRelease
@@ -46,8 +53,10 @@ type SonarrReleaseResponse struct {
 			CoverType string `json:"coverType"`
 			RemoteUrl string `json:"remoteUrl"`
 		} `json:"images"`
+		TitleSlug string `json:"titleSlug"`
 	} `json:"series"`
 	AirDateUtc string `json:"airDateUtc"`
+	Overview   string `json:"overview"`
 }
 
 type RadarrReleaseResponse struct {
@@ -82,33 +91,29 @@ func HandleReleaseDatesTimezone(airDate time.Time, CustomTimezone string) (strin
 		airDateInLocation := airDate.In(location)
 
 		// Format the date as YYYY-MM-DD HH:MM:SS in the new time zone
-		formattedDate = airDateInLocation.Format("2006-01-02 15:04:05")
+		formattedDate = airDateInLocation.Format("01/02 15:04")
 	} else {
 		// Format the date as YYYY-MM-DD HH:MM:SS
-		formattedDate = airDate.Format("2006-01-02 15:04:05")
+		formattedDate = airDate.Format("01/02 15:04")
 	}
 
 	return formattedDate, nil
 }
 
-func FetchReleasesFromSonarr(SonarrEndpoint string, SonarrApiKey string, CustomTimezone string) (ArrReleases, error) {
-	if SonarrEndpoint == "" {
-		return nil, fmt.Errorf("missing sonarr-endpoint config")
+func FetchApi(apiAddress string, apiEndpoint string, apiKey string, skipSsl bool) ([]byte, error) {
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: skipSsl},
 	}
-
-	if SonarrApiKey == "" {
-		return nil, fmt.Errorf("missing sonarr-apikey config")
+	client := &http.Client{
+		Transport: transport,
 	}
-
-	client := &http.Client{}
-	url := fmt.Sprintf("%s/api/v3/calendar?includeSeries=true", strings.TrimSuffix(SonarrEndpoint, "/"))
+	url := fmt.Sprintf("%s%s", strings.TrimSuffix(apiAddress, "/"), apiEndpoint)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
-
-	req.Header.Set("X-Api-Key", SonarrApiKey)
-	req.Header.Set("Host", extractHostFromURL(SonarrEndpoint))
+	req.Header.Set("X-Api-Key", apiKey)
+	req.Header.Set("Host", extractHostFromURL(apiEndpoint))
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make request: %v", err)
@@ -120,6 +125,23 @@ func FetchReleasesFromSonarr(SonarrEndpoint string, SonarrApiKey string, CustomT
 	}
 
 	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	return body, nil
+}
+
+func FetchReleasesFromSonarr(Sonarr SonarrConfig) (ArrReleases, error) {
+	if Sonarr.Endpoint == "" {
+		return nil, fmt.Errorf("missing sonarr-endpoint config")
+	}
+
+	if Sonarr.ApiKey == "" {
+		return nil, fmt.Errorf("missing sonarr-apikey config")
+	}
+
+	body, err := FetchApi(Sonarr.Endpoint, "/api/v3/calendar?includeSeries=true", Sonarr.ApiKey, Sonarr.SkipSsl)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %v", err)
 	}
@@ -140,12 +162,20 @@ func FetchReleasesFromSonarr(SonarrEndpoint string, SonarrApiKey string, CustomT
 			}
 		}
 
+		// Determine overview to display
+		var overview string
+		if release.Overview == "" {
+			overview = "TBA"
+		} else {
+			overview = release.Overview
+		}
+
 		airDate, err := time.Parse(time.RFC3339, release.AirDateUtc)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse air date: %v", err)
 		}
 
-		formattedDate, err := HandleReleaseDatesTimezone(airDate, CustomTimezone)
+		formattedDate, err := HandleReleaseDatesTimezone(airDate, Sonarr.Timezone)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse air timezone: %v", err)
 		}
@@ -154,48 +184,39 @@ func FetchReleasesFromSonarr(SonarrEndpoint string, SonarrApiKey string, CustomT
 		seasonNumber := fmt.Sprintf("%02d", release.SeasonNumber)
 		episodeNumber := fmt.Sprintf("%02d", release.EpisodeNumber)
 
+		var url string
+		if Sonarr.ExternalUrl != "" {
+			url = Sonarr.ExternalUrl
+		} else {
+			url = Sonarr.Endpoint
+		}
+		linkUrl := fmt.Sprintf("%s/series/%s", strings.TrimSuffix(url, "/"), release.Series.TitleSlug)
+
 		releases = append(releases, ArrRelease{
 			Title:         release.Series.Title,
+			Overview:      overview,
 			ImageCoverUrl: imageCover,
 			AirDateUtc:    formattedDate,
 			SeasonNumber:  &seasonNumber,
 			EpisodeNumber: &episodeNumber,
 			Grabbed:       release.HasFile,
+			Url:           linkUrl,
 		})
 	}
 
 	return releases, nil
 }
 
-func FetchReleasesFromRadarr(RadarrEndpoint string, RadarrApiKey string, CustomTimezone string) (ArrReleases, error) {
-	if RadarrEndpoint == "" {
+func FetchReleasesFromRadarr(Radarr RadarrConfig) (ArrReleases, error) {
+	if Radarr.Endpoint == "" {
 		return nil, fmt.Errorf("missing radarr-endpoint config")
 	}
 
-	if RadarrApiKey == "" {
+	if Radarr.ApiKey == "" {
 		return nil, fmt.Errorf("missing radarr-apikey config")
 	}
 
-	client := &http.Client{}
-	url := fmt.Sprintf("%s/api/v3/calendar", strings.TrimSuffix(RadarrEndpoint, "/"))
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %v", err)
-	}
-
-	req.Header.Set("X-Api-Key", RadarrApiKey)
-	req.Header.Set("Host", extractHostFromURL(RadarrEndpoint))
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to make request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %v", resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
+	body, err := FetchApi(Radarr.Endpoint, "/api/v3/calendar?includeSeries=true", Radarr.ApiKey, Radarr.SkipSsl)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %v", err)
 	}
@@ -232,13 +253,21 @@ func FetchReleasesFromRadarr(RadarrEndpoint string, RadarrApiKey string, CustomT
 			return nil, fmt.Errorf("failed to parse release date: %v", err)
 		}
 
-		timezoneDate, err := HandleReleaseDatesTimezone(airDate, CustomTimezone)
+		timezoneDate, err := HandleReleaseDatesTimezone(airDate, Radarr.Timezone)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse air timezone: %v", err)
 		}
 
 		// Format the date as YYYY-MM-DD HH:MM:SS
 		formattedDate = formattedDate + timezoneDate
+
+		// var url string
+		// if Radarr.ExternalUrl != "" {
+		// 	url = Radarr.ExternalUrl
+		// } else {
+		// 	url = Radarr.Endpoint
+		// }
+		// linkUrl := fmt.Sprintf("%s/series/%s", strings.TrimSuffix(url, "/"), release.Movies.id) // is it id?
 
 		releases = append(releases, ArrRelease{
 			Title:         release.Title,
@@ -256,7 +285,7 @@ func FetchReleasesFromArrStack(Sonarr SonarrConfig, Radarr RadarrConfig) (ArrRel
 
 	// Call FetchReleasesFromSonarr and handle the result
 	if Sonarr.Enable {
-		sonarrReleases, err := FetchReleasesFromSonarr(Sonarr.Endpoint, Sonarr.ApiKey, Sonarr.Timezone)
+		sonarrReleases, err := FetchReleasesFromSonarr(Sonarr)
 		if err != nil {
 			slog.Warn("failed to fetch release from sonarr", "error", err)
 			return nil, err
@@ -267,7 +296,7 @@ func FetchReleasesFromArrStack(Sonarr SonarrConfig, Radarr RadarrConfig) (ArrRel
 
 	// Call FetchReleasesFromRadarr and handle the result
 	if Radarr.Enable {
-		radarrReleases, err := FetchReleasesFromRadarr(Radarr.Endpoint, Radarr.ApiKey, Radarr.Timezone)
+		radarrReleases, err := FetchReleasesFromRadarr(Radarr)
 		if err != nil {
 			slog.Warn("failed to fetch release from radarr", "error", err)
 			return nil, err
