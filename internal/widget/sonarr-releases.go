@@ -20,7 +20,7 @@ type SonarrInternal struct {
 type SonarrReleases struct {
 	widgetBase    `yaml:",inline"`
 	Releases      feed.SonarrReleases `yaml:"-"`
-	Sonarr        SonarrInternal      `yaml:"sonarr"`
+	Sonarr        SonarrInternal      `yaml:"config"`
 	CollapseAfter int                 `yaml:"collapse-after"`
 	CacheDuration time.Duration       `yaml:"cache-duration"`
 }

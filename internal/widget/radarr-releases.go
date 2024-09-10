@@ -20,7 +20,7 @@ type RadarrInternal struct {
 type RadarrReleases struct {
 	widgetBase    `yaml:",inline"`
 	Releases      feed.RadarrReleases `yaml:"-"`
-	Radarr        RadarrInternal      `yaml:"radarr"`
+	Radarr        RadarrInternal      `yaml:"config"`
 	CollapseAfter int                 `yaml:"collapse-after"`
 	CacheDuration time.Duration       `yaml:"cache-duration"`
 }
