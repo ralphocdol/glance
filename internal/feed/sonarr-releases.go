@@ -83,9 +83,12 @@ func FetchReleasesFromSonarr(Sonarr SonarrConfig) (SonarrReleases, error) {
 
 	var appendPreviousDays string
 	if Sonarr.FromPreviousDays != 0 {
-		currentUTC := time.Now().UTC()
-		previousDays := currentUTC.AddDate(0, 0, -Sonarr.FromPreviousDays).Truncate(24 * time.Hour)
-		appendPreviousDays = fmt.Sprintf("&start=%s", previousDays.Format("2006-01-02T15:04:05Z"))
+		timeFormat := "2006-01-02T15:04:05Z"
+		currentDate, err := time.Parse(timeFormat, time.Now().Format("2006-01-02T")+"00:00:00Z")
+		if err == nil {
+			previousDays := currentDate.AddDate(0, 0, -Sonarr.FromPreviousDays)
+			appendPreviousDays = fmt.Sprintf("&start=%s", previousDays.Format(timeFormat))
+		}
 	}
 
 	var appendTags string
