@@ -9,11 +9,13 @@ import (
 )
 
 type SonarrConfig struct {
-	InternalUrl string `yaml:"internal-url"`
-	SkipSsl     bool   `yaml:"skipssl"`
-	ApiKey      string `yaml:"apikey"`
-	ExternalUrl string `yaml:"external-url"`
-	Timezone    string `yaml:"timezone"`
+	InternalUrl      string `yaml:"internal-url"`
+	SkipSsl          bool   `yaml:"skipssl"`
+	ApiKey           string `yaml:"apikey"`
+	ExternalUrl      string `yaml:"external-url"`
+	Timezone         string `yaml:"timezone"`
+	FromPreviousDays int    `yaml:"from-previous-days"`
+	Tags             string `yaml:"tags"`
 }
 
 type SonarrRelease struct {
@@ -75,7 +77,25 @@ func FetchReleasesFromSonarr(Sonarr SonarrConfig) (SonarrReleases, error) {
 		return nil, fmt.Errorf("missing sonarr-apikey config")
 	}
 
-	url := fmt.Sprintf("%s/api/v3/calendar?includeSeries=true", strings.TrimSuffix(Sonarr.InternalUrl, "/"))
+	if Sonarr.FromPreviousDays < 0 || Sonarr.FromPreviousDays > 6 {
+		Sonarr.FromPreviousDays = 0
+	}
+
+	var appendPreviousDays string
+	if Sonarr.FromPreviousDays != 0 {
+		currentUTC := time.Now().UTC()
+		previousDays := currentUTC.AddDate(0, 0, -Sonarr.FromPreviousDays).Truncate(24 * time.Hour)
+		appendPreviousDays = fmt.Sprintf("&start=%s", previousDays.Format("2006-01-02T15:04:05Z"))
+	}
+
+	var appendTags string
+	if Sonarr.Tags != "" {
+		appendTags = fmt.Sprintf("&tags=%s", Sonarr.Tags)
+	}
+
+	appendParameters := appendPreviousDays + appendTags
+
+	url := fmt.Sprintf("%s/api/v3/calendar?includeSeries=true%s", strings.TrimSuffix(Sonarr.InternalUrl, "/"), appendParameters)
 	httpRequest, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -89,7 +109,11 @@ func FetchReleasesFromSonarr(Sonarr SonarrConfig) (SonarrReleases, error) {
 	} else {
 		clientType = defaultClient
 	}
+
 	response, err := decodeJsonFromRequest[[]SonarrReleaseResponse](clientType, httpRequest)
+	if err != nil {
+		return nil, err
+	}
 
 	var releases SonarrReleases
 	for _, release := range response {
