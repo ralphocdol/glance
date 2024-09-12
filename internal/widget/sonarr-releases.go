@@ -10,11 +10,13 @@ import (
 )
 
 type SonarrInternal struct {
-	InternalUrl string            `yaml:"internal-url"`
-	SkipSsl     bool              `yaml:"skipssl"`
-	ApiKey      OptionalEnvString `yaml:"apikey"`
-	Timezone    string            `yaml:"timezone"`
-	ExternalUrl string            `yaml:"external-url"`
+	InternalUrl      string            `yaml:"internal-url"`
+	SkipSsl          bool              `yaml:"skipssl"`
+	ApiKey           OptionalEnvString `yaml:"apikey"`
+	Timezone         string            `yaml:"timezone"`
+	ExternalUrl      string            `yaml:"external-url"`
+	FromPreviousDays int               `yaml:"from-previous-days"`
+	Tags             string            `yaml:"tags"`
 }
 
 type SonarrReleases struct {
@@ -27,11 +29,13 @@ type SonarrReleases struct {
 
 func convertToSonarrConfig(s SonarrInternal) feed.SonarrConfig {
 	return feed.SonarrConfig{
-		InternalUrl: s.InternalUrl,
-		SkipSsl:     s.SkipSsl,
-		ApiKey:      string(s.ApiKey),
-		Timezone:    s.Timezone,
-		ExternalUrl: s.ExternalUrl,
+		InternalUrl:      s.InternalUrl,
+		SkipSsl:          s.SkipSsl,
+		ApiKey:           string(s.ApiKey),
+		Timezone:         s.Timezone,
+		ExternalUrl:      s.ExternalUrl,
+		FromPreviousDays: s.FromPreviousDays,
+		Tags:             s.Tags,
 	}
 }
 
