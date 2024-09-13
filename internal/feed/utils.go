@@ -115,3 +115,22 @@ func normalizeVersionFormat(version string) string {
 
 	return version
 }
+
+func getStartOfDay(t time.Time, loc *time.Location) time.Time {
+	return time.Date(
+		t.Year(),
+		t.Month(),
+		t.Day(),
+		0, 0, 0, 0,
+		loc,
+	)
+}
+func getEndOfDay(t time.Time, loc *time.Location) time.Time {
+	return time.Date(
+		t.Year(),
+		t.Month(),
+		t.Day(),
+		23, 59, 59, 999999999,
+		loc,
+	)
+}

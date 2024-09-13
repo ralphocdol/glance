@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -14,6 +15,7 @@ type SonarrConfig struct {
 	ApiKey           string `yaml:"apikey"`
 	ExternalUrl      string `yaml:"external-url"`
 	Timezone         string `yaml:"timezone"`
+	DayOffset        int    `yaml:"day-offset"`
 	FromPreviousDays int    `yaml:"from-previous-days"`
 	Tags             string `yaml:"tags"`
 }
@@ -47,27 +49,6 @@ type SonarrReleaseResponse struct {
 	EpisodeTitle string `json:"title"`
 }
 
-func HandleSonarrReleaseDatesTimezone(airDate time.Time, CustomTimezone string) (string, error) {
-	var formattedDate string
-	if CustomTimezone != "" {
-		location, err := time.LoadLocation(CustomTimezone)
-		if err != nil {
-			return "", fmt.Errorf("failed to load location: %v", err)
-		}
-
-		// Convert the parsed time to the new time zone
-		airDateInLocation := airDate.In(location)
-
-		// Format the date as MM-DD HH:SS in the new time zone
-		formattedDate = airDateInLocation.Format("01-02 15:04")
-	} else {
-		// Format the date as MM-DD
-		formattedDate = airDate.Format("01-02 15:04")
-	}
-
-	return formattedDate, nil
-}
-
 func FetchReleasesFromSonarr(Sonarr SonarrConfig) (SonarrReleases, error) {
 	if Sonarr.InternalUrl == "" {
 		return nil, fmt.Errorf("missing sonarr internal-url config")
@@ -81,14 +62,31 @@ func FetchReleasesFromSonarr(Sonarr SonarrConfig) (SonarrReleases, error) {
 		Sonarr.FromPreviousDays = 0
 	}
 
-	var appendPreviousDays string
-	if Sonarr.FromPreviousDays != 0 {
-		timeFormat := "2006-01-02T15:04:05Z"
-		currentDate, err := time.Parse(timeFormat, time.Now().Format("2006-01-02T")+"00:00:00Z")
-		if err == nil {
-			previousDays := currentDate.AddDate(0, 0, -Sonarr.FromPreviousDays)
-			appendPreviousDays = fmt.Sprintf("&start=%s", previousDays.Format(timeFormat))
+	timeSetLocal := time.Now()
+	timeSetUTC := timeSetLocal.UTC()
+	if Sonarr.DayOffset != 0 {
+		timeSetLocal = timeSetLocal.AddDate(0, 0, Sonarr.DayOffset)
+		timeSetUTC = timeSetUTC.AddDate(0, 0, Sonarr.DayOffset)
+	}
+	startDateUTC := getStartOfDay(timeSetUTC, time.UTC)
+	endDateUTC := getEndOfDay(timeSetUTC, time.UTC)
+
+	timeLocal := time.Local
+
+	var startDateLocal, endDateLocal time.Time
+	if Sonarr.Timezone != "" {
+		loc, err := time.LoadLocation(Sonarr.Timezone)
+		if err != nil {
+			return nil, err
 		}
+		timeLocal = loc
+	}
+	startDateLocal = getStartOfDay(timeSetLocal, timeLocal)
+	endDateLocal = getEndOfDay(timeSetLocal, timeLocal)
+
+	if Sonarr.FromPreviousDays != 0 {
+		startDateUTC = startDateUTC.AddDate(0, 0, -Sonarr.FromPreviousDays)
+		startDateLocal = startDateLocal.AddDate(0, 0, -Sonarr.FromPreviousDays)
 	}
 
 	var appendTags string
@@ -96,8 +94,13 @@ func FetchReleasesFromSonarr(Sonarr SonarrConfig) (SonarrReleases, error) {
 		appendTags = fmt.Sprintf("&tags=%s", Sonarr.Tags)
 	}
 
-	appendParameters := appendPreviousDays + appendTags
+	// Query ±1 date range
+	dateRangeFilter := fmt.Sprintf("&start=%s&end=%s",
+		url.QueryEscape(startDateUTC.AddDate(0, 0, -1).Format(time.RFC3339)),
+		url.QueryEscape(endDateUTC.AddDate(0, 0, 1).Format(time.RFC3339)),
+	)
 
+	appendParameters := appendTags + dateRangeFilter
 	url := fmt.Sprintf("%s/api/v3/calendar?includeSeries=true%s", strings.TrimSuffix(Sonarr.InternalUrl, "/"), appendParameters)
 	httpRequest, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -120,6 +123,16 @@ func FetchReleasesFromSonarr(Sonarr SonarrConfig) (SonarrReleases, error) {
 
 	var releases SonarrReleases
 	for _, release := range response {
+		airDate, err := time.Parse(time.RFC3339, release.AirDateUtc)
+		if err != nil {
+			return nil, err
+		}
+
+		airDateLocal := airDate.In(timeLocal)
+		if airDateLocal.Before(startDateLocal) || airDateLocal.After(endDateLocal) {
+			continue
+		}
+
 		var imageCover string
 		for _, image := range release.Series.Images {
 			if image.CoverType == "poster" {
@@ -128,15 +141,7 @@ func FetchReleasesFromSonarr(Sonarr SonarrConfig) (SonarrReleases, error) {
 			}
 		}
 
-		airDate, err := time.Parse(time.RFC3339, release.AirDateUtc)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse air date: %v", err)
-		}
-
-		formattedDate, err := HandleSonarrReleaseDatesTimezone(airDate, Sonarr.Timezone)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse air timezone: %v", err)
-		}
+		formattedDate := airDateLocal.Format("01-02 15:04")
 
 		// Format SeasonNumber and EpisodeNumber with at least two digits
 		seasonNumber := fmt.Sprintf("%02d", release.SeasonNumber)

@@ -15,6 +15,7 @@ type SonarrInternal struct {
 	ApiKey           OptionalEnvString `yaml:"apikey"`
 	Timezone         string            `yaml:"timezone"`
 	ExternalUrl      string            `yaml:"external-url"`
+	DayOffset        int               `yaml:"day-offset"`
 	FromPreviousDays int               `yaml:"from-previous-days"`
 	Tags             string            `yaml:"tags"`
 }
@@ -34,6 +35,7 @@ func convertToSonarrConfig(s SonarrInternal) feed.SonarrConfig {
 		ApiKey:           string(s.ApiKey),
 		Timezone:         s.Timezone,
 		ExternalUrl:      s.ExternalUrl,
+		DayOffset:        s.DayOffset,
 		FromPreviousDays: s.FromPreviousDays,
 		Tags:             s.Tags,
 	}
