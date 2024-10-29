@@ -1,10 +1,11 @@
 package feed
 
 import (
-	"context"
 	"fmt"
 	"html"
+	"io"
 	"log/slog"
+	"net/http"
 	"net/url"
 	"regexp"
 	"sort"
@@ -64,6 +65,7 @@ type RSSFeedRequest struct {
 	HideCategories  bool   `yaml:"hide-categories"`
 	HideDescription bool   `yaml:"hide-description"`
 	ItemLinkPrefix  string `yaml:"item-link-prefix"`
+  Headers         map[string]string `yaml:"headers"`
 	IsDetailed      bool   `yaml:"-"`
 	HideTitle       bool   `yaml:"hide-title"`
 	ShowSource      bool   `yaml:"show-domain-source"`
@@ -82,10 +84,31 @@ func (f RSSFeedItems) SortByNewest() RSSFeedItems {
 var feedParser = gofeed.NewParser()
 
 func getItemsFromRSSFeedTask(request RSSFeedRequest) ([]RSSFeedItem, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
+	req, err := http.NewRequest("GET", request.Url, nil)
+	if err != nil {
+		return nil, err
+	}
 
-	feed, err := feedParser.ParseURLWithContext(request.Url, ctx)
+	for key, value := range request.Headers {
+		req.Header.Add(key, value)
+	}
+
+	resp, err := defaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code %d from %s", resp.StatusCode, request.Url)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	feed, err := feedParser.ParseString(string(body))
 
 	if err != nil {
 		return nil, err
