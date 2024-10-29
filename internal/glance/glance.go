@@ -70,15 +70,16 @@ type templateData struct {
 }
 
 type Page struct {
-	Title                 string   `yaml:"name"`
-	Slug                  string   `yaml:"slug"`
-	Width                 string   `yaml:"width"`
-	ShowMobileHeader      bool     `yaml:"show-mobile-header"`
-	HideDesktopNavigation bool     `yaml:"hide-desktop-navigation"`
-	CenterVertically      bool     `yaml:"center-vertically"`
-	Columns               []Column `yaml:"columns"`
-	PrimaryColumnIndex    int8     `yaml:"-"`
-	mu                    sync.Mutex
+	Title                      string   `yaml:"name"`
+	Slug                       string   `yaml:"slug"`
+	Width                      string   `yaml:"width"`
+	ShowMobileHeader           bool     `yaml:"show-mobile-header"`
+	ExpandMobilePageNavigation bool     `yaml:"expand-mobile-page-navigation"`
+	HideDesktopNavigation      bool     `yaml:"hide-desktop-navigation"`
+	CenterVertically           bool     `yaml:"center-vertically"`
+	Columns                    []Column `yaml:"columns"`
+	PrimaryColumnIndex         int8     `yaml:"-"`
+	mu                         sync.Mutex
 }
 
 func (p *Page) UpdateOutdatedWidgets() {
@@ -291,7 +292,7 @@ func (a *Application) Serve() error {
 		w.WriteHeader(http.StatusOK)
 	})
 
-    mux.HandleFunc(fmt.Sprintf("GET /static/%s/manifest.json", a.Config.Server.AssetsHash), a.HandleManifestRequest)
+	mux.HandleFunc(fmt.Sprintf("GET /static/%s/manifest.json", a.Config.Server.AssetsHash), a.HandleManifestRequest)
 
 	mux.Handle(
 		fmt.Sprintf("GET /static/%s/{path...}", a.Config.Server.AssetsHash),
@@ -322,31 +323,31 @@ func (a *Application) Serve() error {
 }
 
 func (a *Application) HandleManifestRequest(w http.ResponseWriter, r *http.Request) {
-    manifest := map[string]interface{}{
-        "name": func() string {
-            if a.Config.Branding.PwaText != "" {
-                return a.Config.Branding.PwaText
-            }
-            return "Glance"
-        }(),
+	manifest := map[string]interface{}{
+		"name": func() string {
+			if a.Config.Branding.PwaText != "" {
+				return a.Config.Branding.PwaText
+			}
+			return "Glance"
+		}(),
         "display": "standalone",
-        "background_color": "#151519",
+		"background_color": "#151519",
         "scope": "/",
         "start_url": "/",
-        "icons": []map[string]string{
-            {
-                "src": func() string {
-                    if a.Config.Branding.FaviconURL != "" {
-                        return a.Config.Branding.FaviconURL
-                    }
-                    return "app-icon.png"
-                }(),
+		"icons": []map[string]string{
+			{
+				"src": func() string {
+					if a.Config.Branding.FaviconURL != "" {
+						return a.Config.Branding.FaviconURL
+					}
+					return "app-icon.png"
+				}(),
                 "type": "image/png",
-                "sizes": "512x512",
-            },
-        },
-    }
+				"sizes": "512x512",
+			},
+		},
+	}
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(manifest)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(manifest)
 }
