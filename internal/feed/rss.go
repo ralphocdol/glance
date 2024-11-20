@@ -25,6 +25,8 @@ type RSSFeedItem struct {
 	Categories  []string
 	Description string
 	PublishedAt time.Time
+	SourceName  string
+	SourceURL   string
 }
 
 // doesn't cover all cases but works the vast majority of the time
@@ -58,13 +60,15 @@ func shortenFeedDescriptionLen(description string, maxLen int) string {
 }
 
 type RSSFeedRequest struct {
-	Url             string            `yaml:"url"`
-	Title           string            `yaml:"title"`
-	HideCategories  bool              `yaml:"hide-categories"`
-	HideDescription bool              `yaml:"hide-description"`
-	ItemLinkPrefix  string            `yaml:"item-link-prefix"`
-	Headers         map[string]string `yaml:"headers"`
-	IsDetailed      bool              `yaml:"-"`
+	Url             string `yaml:"url"`
+	Title           string `yaml:"title"`
+	HideCategories  bool   `yaml:"hide-categories"`
+	HideDescription bool   `yaml:"hide-description"`
+	ItemLinkPrefix  string `yaml:"item-link-prefix"`
+  Headers         map[string]string `yaml:"headers"`
+	IsDetailed      bool   `yaml:"-"`
+	HideTitle       bool   `yaml:"hide-title"`
+	ShowSource      bool   `yaml:"show-domain-source"`
 }
 
 type RSSFeedItems []RSSFeedItem
@@ -103,7 +107,7 @@ func getItemsFromRSSFeedTask(request RSSFeedRequest) ([]RSSFeedItem, error) {
 	if err != nil {
 		return nil, err
 	}
-
+ 
 	feed, err := feedParser.ParseString(string(body))
 
 	if err != nil {
@@ -173,7 +177,18 @@ func getItemsFromRSSFeedTask(request RSSFeedRequest) ([]RSSFeedItem, error) {
 			}
 		}
 
-		if request.Title != "" {
+		if request.ShowSource {
+			parsedUrl, err := url.Parse(rssItem.Link)
+			if err != nil {
+				return nil, err
+			}
+			rssItem.SourceName = parsedUrl.Host
+			rssItem.SourceURL = parsedUrl.Scheme + "://" + parsedUrl.Host
+		}
+
+		if request.HideTitle {
+			rssItem.ChannelName = ""
+		} else if request.Title != "" {
 			rssItem.ChannelName = request.Title
 		} else {
 			rssItem.ChannelName = feed.Title

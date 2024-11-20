@@ -160,7 +160,7 @@ func (f *OptionalEnvString) UnmarshalYAML(node *yaml.Node) error {
 			err = fmt.Errorf("environment variable %s not found", key)
 			return ""
 		}
-
+    
 		return prefix + value
 	})
 

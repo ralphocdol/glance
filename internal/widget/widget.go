@@ -71,6 +71,10 @@ func New(widgetType string) (Widget, error) {
 		widget = &SplitColumn{}
 	case "custom-api":
 		widget = &CustomApi{}
+	case "sonarr-releases":
+		return &SonarrReleases{}, nil
+	case "radarr-releases":
+		return &RadarrReleases{}, nil
 	default:
 		return nil, fmt.Errorf("unknown widget type: %s", widgetType)
 	}

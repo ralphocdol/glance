@@ -478,15 +478,16 @@ Example:
 ```
 
 #### Properties
-| Name | Type | Required | Default |
-| ---- | ---- | -------- | ------- |
-| style | string | no | vertical-list |
-| feeds | array | yes |
-| thumbnail-height | float | no | 10 |
-| card-height | float | no | 27 |
-| limit | integer | no | 25 |
-| single-line-titles | boolean | no | false |
-| collapse-after | integer | no | 5 |
+| Name | Type | Required | Default | Note
+| ---- | ---- | -------- | ------- | ------- |
+| style | string | no | vertical-list | |
+| feeds | array | yes | |
+| thumbnail-height | float | no | 10 | |
+| card-height | float | no | 27 | |
+| limit | integer | no | 25 | |
+| single-line-titles | boolean | no | false | |
+| collapse-after | integer | no | 5 | |
+| title-line-limit | integer | no | 3 | Only applicable for `horizontal-cards` style. Max is 3 |
 
 ##### `style`
 Used to change the appearance of the widget. Possible values are:
@@ -532,6 +533,8 @@ An array of RSS/atom feeds. The title can optionally be changed.
 | hide-description | boolean | no | false | Only applicable for `detailed-list` style |
 | item-link-prefix | string | no | | |
 | headers | key (string) & value (string) | no | | |
+| hide-title | boolean | no | false | |
+| show-domain-source | boolean | no | false | |
 
 ###### `item-link-prefix`
 If an RSS feed isn't returning item links with a base domain and Glance has failed to automatically detect the correct domain you can manually add a prefix to each link with this property.
@@ -546,6 +549,8 @@ Optionally specify the headers that will be sent with the request. Example:
       headers:
         User-Agent: Custom User Agent
 ```
+###### `show-domain-source`
+Useful when using FreshRSS' user queries since it shows the query name instead of the actual source
 
 ##### `limit`
 The maximum number of articles to show.
@@ -952,7 +957,6 @@ Example:
       <<: *shared-properties
 ```
 
-### Split Column
 <!-- TODO: update -->
 Splits a full sized column in half, allowing you to place widgets side by side. This is converted to a single column on mobile devices or if not enough width is available. Widgets are defined using a `widgets` property exactly as you would on a page column.
 

@@ -43,6 +43,7 @@ func (widget *CustomApi) Initialize() error {
 	widget.compiledTemplate = compiledTemplate
 
 	req, err := http.NewRequest(http.MethodGet, widget.URL.String(), nil)
+
 	if err != nil {
 		return err
 	}

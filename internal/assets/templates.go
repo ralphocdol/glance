@@ -42,6 +42,8 @@ var (
 	DNSStatsTemplate              = compileTemplate("dns-stats.html", "widget-base.html")
 	SplitColumnTemplate           = compileTemplate("split-column.html", "widget-base.html")
 	CustomAPITemplate             = compileTemplate("custom-api.html", "widget-base.html")
+	SonarrReleasesTemplate        = compileTemplate("sonarr-releases.html", "widget-base.html")
+	RadarrReleasesTemplate        = compileTemplate("radarr-releases.html", "widget-base.html")
 )
 
 var GlobalTemplateFunctions = template.FuncMap{
