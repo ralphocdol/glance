@@ -1,6 +1,6 @@
 import { setupPopovers } from './popover.js';
 import { setupMasonries } from './masonry.js';
-import { throttledDebounce, isElementVisible } from './utils.js';
+import { throttledDebounce, isElementVisible, openURLInNewTab } from './utils.js';
 
 async function fetchPageContent(pageData) {
     // TODO: handle non 200 status codes/time outs
@@ -105,6 +105,7 @@ function setupSearchBoxes() {
         const bangsMap = {};
         const kbdElement = widget.getElementsByTagName("kbd")[0];
         let currentBang = null;
+        let lastQuery = "";
 
         for (let j = 0; j < bangs.length; j++) {
             const bang = bangs[j];
@@ -141,6 +142,14 @@ function setupSearchBoxes() {
                     window.location.href = url;
                 }
 
+                lastQuery = query;
+                inputElement.value = "";
+
+                return;
+            }
+
+            if (event.key == "ArrowUp" && lastQuery.length > 0) {
+                inputElement.value = lastQuery;
                 return;
             }
         };
@@ -246,8 +255,24 @@ function setupGroups() {
 
         for (let t = 0; t < titles.length; t++) {
             const title = titles[t];
+
+            if (title.dataset.titleUrl !== undefined) {
+                title.addEventListener("mousedown", (event) => {
+                    if (event.button != 1) {
+                        return;
+                    }
+
+                    openURLInNewTab(title.dataset.titleUrl, false);
+                    event.preventDefault();
+                });
+            }
+
             title.addEventListener("click", () => {
                 if (t == current) {
+                    if (title.dataset.titleUrl !== undefined) {
+                        openURLInNewTab(title.dataset.titleUrl);
+                    }
+
                     return;
                 }
 
@@ -503,9 +528,34 @@ function timeInZone(now, zone) {
         timeInZone = now
     }
 
-    const diffInHours = Math.round((timeInZone.getTime() - now.getTime()) / 1000 / 60 / 60);
+    const diffInMinutes = Math.round((timeInZone.getTime() - now.getTime()) / 1000 / 60);
 
-    return { time: timeInZone, diffInHours: diffInHours };
+    return { time: timeInZone, diffInMinutes: diffInMinutes };
+}
+
+function zoneDiffText(diffInMinutes) {
+    if (diffInMinutes == 0) {
+        return "";
+    }
+
+    const sign = diffInMinutes < 0 ? "-" : "+";
+    const signText = diffInMinutes < 0 ? "behind" : "ahead";
+
+    diffInMinutes = Math.abs(diffInMinutes);
+
+    const hours = Math.floor(diffInMinutes / 60);
+    const minutes = diffInMinutes % 60;
+    const hourSuffix = hours == 1 ? "" : "s";
+
+    if (minutes == 0) {
+        return { text: `${sign}${hours}h`, title: `${hours} hour${hourSuffix} ${signText}` };
+    }
+
+    if (hours == 0) {
+        return { text: `${sign}${minutes}m`, title: `${minutes} minutes ${signText}` };
+    }
+
+    return { text: `${sign}${hours}h~`, title: `${hours} hour${hourSuffix} and ${minutes} minutes ${signText}` };
 }
 
 function setupClocks() {
@@ -548,9 +598,11 @@ function setupClocks() {
             );
 
             updateCallbacks.push((now) => {
-                const { time, diffInHours } = timeInZone(now, timeZoneContainer.dataset.timeInZone);
+                const { time, diffInMinutes } = timeInZone(now, timeZoneContainer.dataset.timeInZone);
                 setZoneTime(time);
-                diffElement.textContent = (diffInHours <= 0 ? diffInHours : '+' + diffInHours) + 'h';
+                const { text, title } = zoneDiffText(diffInMinutes);
+                diffElement.textContent = text;
+                diffElement.title = title;
             });
         }
     }

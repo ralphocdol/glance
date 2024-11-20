@@ -107,7 +107,7 @@ func getItemsFromRSSFeedTask(request RSSFeedRequest) ([]RSSFeedItem, error) {
 	if err != nil {
 		return nil, err
 	}
-
+ 
 	feed, err := feedParser.ParseString(string(body))
 
 	if err != nil {

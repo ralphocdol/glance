@@ -315,6 +315,7 @@ pages:
 | width | string | no | |
 | center-vertically | boolean | no | false |
 | hide-desktop-navigation | boolean | no | false |
+| expand-mobile-page-navigation | boolean | no | false |
 | show-mobile-header | boolean | no | false |
 | columns | array | yes | |
 
@@ -340,6 +341,9 @@ When set to `true`, vertically centers the content on the page. Has no effect if
 
 #### `hide-desktop-navigation`
 Whether to show the navigation links at the top of the page on desktop.
+
+#### `expand-mobile-page-navigation`
+Whether the mobile page navigation should be expanded by default.
 
 #### `show-mobile-header`
 Whether to show a header displaying the name of the page on mobile. The header purposefully has a lot of vertical whitespace in order to push the content down and make it easier to reach on tall devices.
@@ -847,6 +851,7 @@ Preview:
 | <kbd>Enter</kbd> | Perform search in the same tab | Search input is focused and not empty |
 | <kbd>Ctrl</kbd> + <kbd>Enter</kbd> | Perform search in a new tab | Search input is focused and not empty |
 | <kbd>Escape</kbd> | Leave focus | Search input is focused |
+| <kbd>Up</kbd> | Insert the last search query since the page was opened into the input field | Search input is focused |
 
 > [!TIP]
 >
@@ -952,7 +957,7 @@ Example:
       <<: *shared-properties
 ```
 
-### Split Column
+<!-- TODO: update -->
 Splits a full sized column in half, allowing you to place widgets side by side. This is converted to a single column on mobile devices or if not enough width is available. Widgets are defined using a `widgets` property exactly as you would on a page column.
 
 Example of a full page with an effective 4 column layout using two split column widgets inside of two full sized columns:
@@ -1148,10 +1153,18 @@ You can hover over the "ERROR" text to view more information.
 | Name | Type | Required | Default |
 | ---- | ---- | -------- | ------- |
 | sites | array | yes | |
+| style | string | no | |
 | show-failing-only | boolean | no | false |
 
 ##### `show-failing-only`
 Shows only a list of failing sites when set to `true`.
+
+##### `style`
+Used to change the appearance of the widget. Possible values are `compact`.
+
+Preview of `compact`:
+
+![](images/monitor-widget-compact-preview.png)
 
 ##### `sites`
 
@@ -1181,7 +1194,7 @@ The URL which will be requested and its response will determine the status of th
 
 `icon`
 
-Optional URL to an image which will be used as the icon for the site. Can be an external URL or internal via [server configured assets](#assets-path). You can also directly use [Simple Icons](https://simpleicons.org/) via a `si:` prefix:
+Optional URL to an image which will be used as the icon for the site. Can be an external URL or internal via [server configured assets](#assets-path). You can also directly use [Simple Icons](https://simpleicons.org/) via a `si:` prefix or [Dashboard Icons](https://github.com/walkxcode/dashboard-icons) via a `di:` prefix:
 
 ```yaml
 icon: si:jellyfin
@@ -1468,7 +1481,7 @@ An array of groups which can optionally have a title and a custom color.
 
 `icon`
 
-URL pointing to an image. You can also directly use [Simple Icons](https://simpleicons.org/) via a `si:` prefix:
+URL pointing to an image. You can also directly use [Simple Icons](https://simpleicons.org/) via a `si:` prefix or [Dashboard Icons](https://github.com/walkxcode/dashboard-icons) via a `di:` prefix:
 
 ```yaml
 icon: si:gmail
