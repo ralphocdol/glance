@@ -1075,7 +1075,7 @@ details[open] .summary::after {
     opacity: 0.8;
 }
 
-:root:not(.light-scheme) .simple-icon {
+:root:not(.light-scheme) .flat-icon {
     filter: invert(1);
 }
 
@@ -1355,6 +1355,10 @@ details[open] .summary::after {
     transform: translate(-50%, -50%);
 }
 
+.clock-time {
+    min-width: 8ch;
+}
+
 .clock-time span {
     color: var(--color-text-highlight);
 }
@@ -1371,7 +1375,7 @@ details[open] .summary::after {
     transition: filter 0.3s, opacity 0.3s;
 }
 
-.monitor-site-icon.simple-icon {
+.monitor-site-icon.flat-icon {
     opacity: 0.7;
 }
 
@@ -1379,7 +1383,7 @@ details[open] .summary::after {
     opacity: 1;
 }
 
-.monitor-site:hover .monitor-site-icon:not(.simple-icon) {
+.monitor-site:hover .monitor-site-icon:not(.flat-icon) {
     filter: grayscale(0);
 }
 
@@ -1388,6 +1392,12 @@ details[open] .summary::after {
     margin-left: auto;
     width: 2rem;
     height: 2rem;
+}
+
+.monitor-site-status-icon-compact {
+    width: 1.8rem;
+    height: 1.8rem;
+    flex-shrink: 0;
 }
 
 .thumbnail {
@@ -1510,7 +1520,8 @@ details[open] .summary::after {
 }
 
 .twitch-stream-preview {
-    width: 100%;
+    max-width: 100%;
+    width: 400px;
     aspect-ratio: 16 / 9;
     border-radius: var(--border-radius);
     object-fit: cover;
@@ -1830,6 +1841,7 @@ details[open] .summary::after {
 .gap-5              { gap: 0.5rem; }
 .gap-7              { gap: 0.7rem; }
 .gap-10             { gap: 1rem; }
+.gap-12             { gap: 1.2rem; }
 .gap-15             { gap: 1.5rem; }
 .gap-20             { gap: 2rem; }
 .gap-25             { gap: 2.5rem; }
@@ -1849,6 +1861,7 @@ details[open] .summary::after {
 .margin-block-3     { margin-block: 0.3rem; }
 .margin-block-5     { margin-block: 0.5rem; }
 .margin-block-7     { margin-block: 0.7rem; }
+.margin-block-8     { margin-block: 0.8rem; }
 .margin-block-10    { margin-block: 1rem; }
 .margin-block-15    { margin-block: 1.5rem; }
 .margin-bottom-3    { margin-bottom: 0.3rem; }
@@ -1862,6 +1875,7 @@ details[open] .summary::after {
 .list               { --list-half-gap: 0rem; }
 .list-gap-2         { --list-half-gap: 0.1rem; }
 .list-gap-4         { --list-half-gap: 0.2rem; }
+.list-gap-8         { --list-half-gap: 0.4rem; }
 .list-gap-10        { --list-half-gap: 0.5rem; }
 .list-gap-14        { --list-half-gap: 0.7rem; }
 .list-gap-20        { --list-half-gap: 1rem; }
