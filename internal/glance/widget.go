@@ -71,6 +71,8 @@ func newWidget(widgetType string) (widget, error) {
 		w = &customAPIWidget{}
 	case "docker-containers":
 		w = &dockerContainersWidget{}
+	case "releases-sonarr":
+		w = &releasesSonarrWidget{}
 	default:
 		return nil, fmt.Errorf("unknown widget type: %s", widgetType)
 	}
