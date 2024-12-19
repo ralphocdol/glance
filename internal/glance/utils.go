@@ -178,3 +178,22 @@ func itemAtIndexOrDefault[T any](items []T, index int, def T) T {
 
 	return items[index]
 }
+
+func getStartOfDay(t time.Time, loc *time.Location) time.Time {
+	return time.Date(
+		t.Year(),
+		t.Month(),
+		t.Day(),
+		0, 0, 0, 0,
+		loc,
+	)
+}
+func getEndOfDay(t time.Time, loc *time.Location) time.Time {
+	return time.Date(
+		t.Year(),
+		t.Month(),
+		t.Day(),
+		23, 59, 59, 999999999,
+		loc,
+	)
+}

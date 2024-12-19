@@ -1,0 +1,43 @@
+{{ template "widget-base.html" . }}
+
+{{ define "widget-content" }}
+<ul class="list list-gap-14 collapsible-container single-line-titles" data-collapse-after="{{ .CollapseAfter }}">
+    {{ if eq (len .Releases) 0 }}
+        <div>No upcoming show(s)</div>
+    {{ else }}
+    {{ range $i, $release := .Releases }}
+    <li>
+        <div class="flex gap-10 items-start thumbnail-container">
+            <div class="show-release-cover-container">
+                {{ if $release.ImageCoverUrl }}
+                <img class="arr-release-cover thumbnail" src="{{ $release.ImageCoverUrl }}" alt="Cover for {{ $release.Title }}" loading="lazy">
+                {{ else }}
+                <div class="arr-release-cover thumbnail placeholder" alt="Cover for {{ $release.Title }}">
+                    <svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 1000" preserveAspectRatio="xMidYMid meet" width="100%" height="100%">
+                        <rect width="100%" height="100%" fill="#e0e0e0" rx="40" ry="40"/>
+                        <text x="50%" y="50%" font-size="100" fill="#888888" text-anchor="middle" dominant-baseline="middle">
+                        No Image
+                        </text>
+                    </svg>
+                </div>
+                {{ end }}
+            </div>
+            <div class="shrink min-width-0">
+                <strong class="size-h3 block text-truncate" title="{{ $release.Title }}">{{ $release.Title }}</strong>
+                <div class="text-truncate" title="{{ $release.EpisodeTitle }}">{{ $release.EpisodeTitle }}</div>
+                <div>S{{ $release.SeasonNumber }}E{{ $release.EpisodeNumber }} - {{ $release.AirDateUtc }}</div>
+                <div class="flex gap-10 items-center">
+                    {{ if $release.Grabbed }}
+                        <div class="arr-grabbed-label">Grabbed</div>
+                    {{ else }}
+                        <div class="arr-missing-label">Missing</div>
+                    {{ end }}
+                    <a href="{{ $release.Url }}#" class="bookmarks-link color-highlight size-h4" target="_blank" rel="noreferrer"></a>
+                </div>                      
+            </div>
+        </div>
+    </li>
+    {{ end }}
+    {{ end }}
+</ul>
+{{ end }}
