@@ -1773,13 +1773,17 @@ details[open] .summary::after {
 }
 
 .arr-release-cover {
-    border-radius: 0.4em;
-    max-width: 6em;
+    width: 8rem;
+    max-width: 8rem;
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    height: 12rem;
+    object-fit: cover;
+    border-radius: 0.5rem;
 }
 
 .arr-release-cover.placeholder {
-    min-width: 6em;
+    width: 8rem;
+    max-width: 8rem;
     overflow: hidden;
 }
 
