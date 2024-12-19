@@ -107,6 +107,8 @@ type rssFeedItem struct {
 	Categories  []string
 	Description string
 	PublishedAt time.Time
+	SourceName  string
+	SourceURL   string
 }
 
 // doesn't cover all cases but works the vast majority of the time
@@ -146,6 +148,8 @@ type rssFeedRequest struct {
 	ItemLinkPrefix  string            `yaml:"item-link-prefix"`
 	Headers         map[string]string `yaml:"headers"`
 	IsDetailed      bool              `yaml:"-"`
+	HideTitle       bool              `yaml:"hide-title"`
+	ShowSource      bool              `yaml:"show-domain-source"`
 }
 
 type rssFeedItemList []rssFeedItem
@@ -252,7 +256,18 @@ func fetchItemsFromRSSFeedTask(request rssFeedRequest) ([]rssFeedItem, error) {
 			}
 		}
 
-		if request.Title != "" {
+		if request.ShowSource {
+			parsedUrl, err := url.Parse(rssItem.Link)
+			if err != nil {
+				return nil, err
+			}
+			rssItem.SourceName = parsedUrl.Host
+			rssItem.SourceURL = parsedUrl.Scheme + "://" + parsedUrl.Host
+		}
+
+		if request.HideTitle {
+			rssItem.ChannelName = ""
+		} else if request.Title != "" {
 			rssItem.ChannelName = request.Title
 		} else {
 			rssItem.ChannelName = feed.Title
