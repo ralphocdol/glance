@@ -491,6 +491,7 @@ Example:
 | limit | integer | no | 25 |
 | single-line-titles | boolean | no | false |
 | collapse-after | integer | no | 5 |
+| title-line-limit | integer | no | 3 | Only applicable for `horizontal-cards` style. Max is 3 |
 
 ##### `style`
 Used to change the appearance of the widget. Possible values are:
