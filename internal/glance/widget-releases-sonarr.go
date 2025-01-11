@@ -160,7 +160,7 @@ func fetchReleasesFromSonarr(Sonarr sonarrConfig) (releasesSonarr, error) {
 	)
 
 	appendParameters := appendTags + dateRangeFilter
-	httpRequest, err := querySonarrApi(Sonarr.ExternalUrl, "calendar", appendParameters, Sonarr.ApiKey)
+	httpRequest, err := querySonarrApi(Sonarr.InternalUrl, "calendar", appendParameters, Sonarr.ApiKey)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +189,7 @@ func fetchReleasesFromSonarr(Sonarr sonarrConfig) (releasesSonarr, error) {
 		if Sonarr.InternalThumbnail {
 			// will show API key, insecure
 			seriesId := fmt.Sprintf("mediacover/%s/poster-500.jpg", strconv.Itoa(release.SeriesId))
-			imageCover = buildSonarrQuery(Sonarr.InternalUrl, seriesId, "", Sonarr.ApiKey)
+			imageCover = buildSonarrQuery(Sonarr.ExternalUrl, seriesId, "", Sonarr.ApiKey)
 		} else {
 			for _, image := range release.Series.Images {
 				if image.CoverType == "poster" {
