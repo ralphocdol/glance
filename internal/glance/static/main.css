@@ -1787,17 +1787,21 @@ details[open] .summary::after {
     overflow: hidden;
 }
 
-.arr-grabbed-label {
-    color: var(--color-positive);
-    font-weight: bold;
-    padding: 2px 5px;
-    border: 1px solid var(--color-positive);
-    border-radius: 3px;
-    display: inline-block;
+.arr-data {
+    height: 12rem;
+    position: relative;
+}
+
+.arr-data > .arr-status {
+    position: absolute;
+    bottom: 10px;
+}
+
+.arr-data > .arr-status > .bookmarks-link {
     margin-top: 5px;
 }
 
-.arr-missing-label {
+.arr-label {
     color: var(--color-negative);
     font-weight: bold;
     padding: 2px 5px;
@@ -1805,6 +1809,16 @@ details[open] .summary::after {
     border-radius: 3px;
     display: inline-block;
     margin-top: 5px;
+}
+
+.arr-label.missing {
+    color: var(--color-negative);
+    border: 1px solid var(--color-negative);
+}
+
+.arr-label.grabbed {
+    color: var(--color-positive);
+    border: 1px solid var(--color-positive);
 }
 
 .size-h1   { font-size: var(--font-size-h1); }

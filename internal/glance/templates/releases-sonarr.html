@@ -20,15 +20,15 @@
                 </div>
                 {{ end }}
             </div>
-            <div class="shrink min-width-0">
+            <div class="shrink min-width-0 arr-data">
                 <strong class="size-h3 block text-truncate" title="{{ $release.Title }}">{{ $release.Title }}</strong>
                 <div class="text-truncate" title="{{ $release.EpisodeTitle }}">{{ $release.EpisodeTitle }}</div>
                 <div>S{{ $release.SeasonNumber }}E{{ $release.EpisodeNumber }} - {{ $release.AirDateUtc }}</div>
-                <div class="flex gap-10 items-center">
+                <div class="flex gap-10 items-center arr-status">
                     {{ if $release.Grabbed }}
-                        <div class="arr-grabbed-label">Grabbed</div>
+                        <div class="arr-label grabbed">Grabbed</div>
                     {{ else }}
-                        <div class="arr-missing-label">Missing</div>
+                        <div class="arr-label missing">Missing</div>
                     {{ end }}
                     <a href="{{ $release.Url }}#" class="bookmarks-link color-highlight size-h4" target="_blank" rel="noreferrer"></a>
                 </div>                      
