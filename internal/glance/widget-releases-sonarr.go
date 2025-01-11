@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -22,14 +23,15 @@ type releasesSonarrWidget struct {
 }
 
 type sonarrConfig struct {
-	InternalUrl      string `yaml:"internal-url"`
-	SkipSsl          bool   `yaml:"skipssl"`
-	ApiKey           string `yaml:"apikey"`
-	ExternalUrl      string `yaml:"external-url"`
-	Timezone         string `yaml:"timezone"`
-	DayOffset        int    `yaml:"day-offset"`
-	FromPreviousDays int    `yaml:"from-previous-days"`
-	Tags             string `yaml:"tags"`
+	InternalUrl       string `yaml:"internal-url"`
+	SkipSsl           bool   `yaml:"skipssl"`
+	ApiKey            string `yaml:"apikey"`
+	ExternalUrl       string `yaml:"external-url"`
+	Timezone          string `yaml:"timezone"`
+	DayOffset         int    `yaml:"day-offset"`
+	FromPreviousDays  int    `yaml:"from-previous-days"`
+	Tags              string `yaml:"tags"`
+	InternalThumbnail bool   `yaml:"internal-insecure-thumbnail"`
 }
 
 type releaseSonarr struct {
@@ -47,6 +49,7 @@ type releasesSonarr []releaseSonarr
 
 type sonarrReleaseResponse struct {
 	HasFile       bool `json:"hasFile"`
+	SeriesId      int  `json:"seriesId"`
 	SeasonNumber  int  `json:"seasonNumber"`
 	EpisodeNumber int  `json:"episodeNumber"`
 	Series        struct {
@@ -157,20 +160,12 @@ func fetchReleasesFromSonarr(Sonarr sonarrConfig) (releasesSonarr, error) {
 	)
 
 	appendParameters := appendTags + dateRangeFilter
-	url := fmt.Sprintf("%s/api/v3/calendar?includeSeries=true%s", strings.TrimSuffix(Sonarr.InternalUrl, "/"), appendParameters)
-	httpRequest, err := http.NewRequest("GET", url, nil)
+	httpRequest, err := querySonarrApi(Sonarr.InternalUrl, "calendar", appendParameters, Sonarr.ApiKey)
 	if err != nil {
 		return nil, err
 	}
 
-	httpRequest.Header.Set("X-Api-Key", Sonarr.ApiKey)
-
-	var clientType *http.Client
-	if Sonarr.SkipSsl {
-		clientType = defaultInsecureHTTPClient
-	} else {
-		clientType = defaultHTTPClient
-	}
+	var clientType = sonarrSkipSsl(Sonarr.SkipSsl)
 
 	response, err := decodeJsonFromRequest[[]sonarrReleaseResponse](clientType, httpRequest)
 	if err != nil {
@@ -190,10 +185,17 @@ func fetchReleasesFromSonarr(Sonarr sonarrConfig) (releasesSonarr, error) {
 		}
 
 		var imageCover string
-		for _, image := range release.Series.Images {
-			if image.CoverType == "poster" {
-				imageCover = image.RemoteUrl
-				break
+
+		if Sonarr.InternalThumbnail {
+			// will show API key, insecure
+			seriesId := fmt.Sprintf("mediacover/%s/poster-500.jpg", strconv.Itoa(release.SeriesId))
+			imageCover = buildSonarrQuery(Sonarr.InternalUrl, seriesId, "", Sonarr.ApiKey)
+		} else {
+			for _, image := range release.Series.Images {
+				if image.CoverType == "poster" {
+					imageCover = image.RemoteUrl
+					break
+				}
 			}
 		}
 
@@ -245,4 +247,43 @@ func handleSonarrReleaseDatesTimezone(airDate time.Time, CustomTimezone string) 
 	}
 
 	return formattedDate, nil
+}
+
+func querySonarrApi(urlPath string, apiPath string, params string, apiKey string) (*http.Request, error) {
+	url := buildSonarrQuery(urlPath, apiPath, params, "")
+	httpRequest, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	httpRequest.Header.Set("X-Api-Key", apiKey)
+
+	return httpRequest, err
+}
+
+func buildSonarrQuery(urlPath string, apiPath string, params string, apiKey string) string {
+	newParam := ""
+	appendApiKey := "apikey=" + apiKey
+	if params != "" {
+		newParam = "?" + params
+		if apiKey != "" {
+			newParam += "&" + appendApiKey
+		}
+	} else if apiKey != "" {
+		newParam = "?" + appendApiKey
+	}
+	url := fmt.Sprintf("%s/api/v3/%s%s", strings.TrimSuffix(urlPath, "/"), apiPath, newParam)
+
+	return url
+}
+
+func sonarrSkipSsl(skipSsl bool) *http.Client {
+	var clientType *http.Client
+	if skipSsl {
+		clientType = defaultInsecureHTTPClient
+	} else {
+		clientType = defaultHTTPClient
+	}
+
+	return clientType
 }
