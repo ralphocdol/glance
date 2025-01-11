@@ -160,7 +160,7 @@ func fetchReleasesFromSonarr(Sonarr sonarrConfig) (releasesSonarr, error) {
 	)
 
 	appendParameters := appendTags + dateRangeFilter
-	httpRequest, err := querySonarrApi(Sonarr.InternalUrl, "calendar", appendParameters, Sonarr.ApiKey)
+	httpRequest, err := querySonarrApi(Sonarr.ExternalUrl, "calendar", appendParameters, Sonarr.ApiKey)
 	if err != nil {
 		return nil, err
 	}
