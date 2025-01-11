@@ -159,7 +159,7 @@ func fetchReleasesFromSonarr(Sonarr sonarrConfig) (releasesSonarr, error) {
 		url.QueryEscape(endDateUTC.AddDate(0, 0, 1).Format(time.RFC3339)),
 	)
 
-	appendParameters := appendTags + dateRangeFilter
+	appendParameters := appendTags + dateRangeFilter + "&includeSeries=true"
 	httpRequest, err := querySonarrApi(Sonarr.InternalUrl, "calendar", appendParameters, Sonarr.ApiKey)
 	if err != nil {
 		return nil, err
@@ -226,27 +226,6 @@ func fetchReleasesFromSonarr(Sonarr sonarrConfig) (releasesSonarr, error) {
 	}
 
 	return releases, nil
-}
-
-func handleSonarrReleaseDatesTimezone(airDate time.Time, CustomTimezone string) (string, error) {
-	var formattedDate string
-	if CustomTimezone != "" {
-		location, err := time.LoadLocation(CustomTimezone)
-		if err != nil {
-			return "", fmt.Errorf("failed to load location: %v", err)
-		}
-
-		// Convert the parsed time to the new time zone
-		airDateInLocation := airDate.In(location)
-
-		// Format the date as MM-DD HH:SS in the new time zone
-		formattedDate = airDateInLocation.Format("01-02 15:04")
-	} else {
-		// Format the date as MM-DD
-		formattedDate = airDate.Format("01-02 15:04")
-	}
-
-	return formattedDate, nil
 }
 
 func querySonarrApi(urlPath string, apiPath string, params string, apiKey string) (*http.Request, error) {
